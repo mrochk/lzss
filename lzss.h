@@ -14,10 +14,16 @@
    Must be greater than 0. */
 #define BREAK_EVEN 1
 
+#define START_OF_REFERENCE_BYTE 0x99
+
 /* Encode src and put the result in dest, dest should be bigger than src in
    case the encoded version takes more place than the original (happens often if
    BREAK_EVEN < 8). */
 extern void lzss_encode(char *src, char *dest);
+
+extern void lzss_encode_file(char *filename);
+
+extern void lzss_decode_file(char *filename);
 
 /* Decode an array of characters encoded using lzss_encode and put
    the result in dest. */

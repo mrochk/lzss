@@ -4,16 +4,16 @@
 #include "lzss.h"
 
 int main() {
-  char original[1000] = "repetitive repeat";
-  char encoded[1000] = {'\0'};
-  char decoded[1000] = {'\0'};
+    char  x[1000]   = "abcdeabcdefabcdefgabcdefghabcdefghj\n";
+    char  res[1000] = "";
+    char* encode    = "input";
+    char* decode    = "input.enc";
 
-  lzss_encode(original, encoded);
-  lzss_decode(encoded, decoded);
+    lzss_encode_file(encode);
+    lzss_decode_file(decode);
 
-  printf("original = %s\n", original);
-  printf("encoded  = %s\n", encoded);
-  printf("decoded  = %s\n", decoded);
+    lzss_encode(x, res);
+    printf("res = %s\n", res);
 
-  return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
