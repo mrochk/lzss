@@ -4,16 +4,14 @@
 #include "lzss.h"
 
 int main() {
-    char  x[1000]   = "abcdeabcdefabcdefgabcdefghabcdefghj\n";
-    char  res[1000] = "";
-    char* encode    = "input";
-    char* decode    = "input.enc";
+    char* encode = "input";
+    char* decode = "input.enc";
 
     lzss_encode_file(encode);
+    puts("File encoded.");
+
     lzss_decode_file(decode);
+    puts("File decoded.");
 
-    lzss_encode(x, res);
-    printf("res = %s\n", res);
-
-    return EXIT_SUCCESS;
+    return 0;
 }

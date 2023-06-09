@@ -1,13 +1,13 @@
 #include "lzss.h"
 
-#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
-    int position, length;
+    int position;
+    int length;
 } SubCoord;
 
 static SubCoord make_subsequence_coord(int position, int length) {
@@ -60,7 +60,7 @@ static SubCoord longest_subsequence(char *window, char *buffer) {
     return make_subsequence_coord(position, length);
 }
 
-extern void lzss_encode(char *src, char *dest) {
+extern void lzss_encode_string(char *src, char *dest) {
     char   window[WINDOW_SIZE + 1], buffer[BUFFER_SIZE + 1] = {'\0'};
     int    _src    = BUFFER_SIZE;
     size_t len_src = strlen(src);
@@ -84,6 +84,27 @@ extern void lzss_encode(char *src, char *dest) {
     }
 }
 
+extern void lzss_decode_string(char *src, char *dest) {
+    for (int i = 0; src[i] != '\0'; i++) {
+        char buf[300] = {'\0'};
+
+        if (src[i] != '(') {
+            sprintf(buf, "%c", src[i]);
+        } else {
+            char coord[30] = {'\0'};
+
+            get_subsequence(src, i, 9, coord);
+            SubCoord sc = get_subsequence_coord(coord);
+
+            get_subsequence(dest, strlen(dest) - sc.position, sc.length, buf);
+
+            i += (2 + ndigits(sc.position) + ndigits(sc.length));
+        }
+
+        strcat(dest, buf);
+    }
+}
+
 extern void lzss_encode_file(char *filename) {
     char encoded_filename[100] = {'\0'};
     strcat(encoded_filename, filename);
@@ -92,48 +113,37 @@ extern void lzss_encode_file(char *filename) {
     FILE *src  = fopen(filename, "r");
     FILE *dest = fopen(encoded_filename, "wb");
 
+    int  _src                    = BUFFER_SIZE;
     char buffer[BUFFER_SIZE + 1] = {'\0'};
-    char window[WINDOW_SIZE + 1];
-
-    int  _src = BUFFER_SIZE;
-    long numbytes;
-
+    char window[WINDOW_SIZE + 1] = {'\0'};
     memset(window, '_', WINDOW_SIZE);
 
     fseek(src, 0L, SEEK_END);
-    numbytes = ftell(src);
+    long src_size = ftell(src);
     fseek(src, 0L, SEEK_SET);
-
-    char *text = (char *)calloc(numbytes, sizeof(char));
-
-    fread(text, sizeof(char), numbytes, src);
-
-    size_t len_src = strlen(text);
-
+    char *text = (char *)calloc(src_size, sizeof(char));
+    fread(text, sizeof(char), src_size, src);
     strncat(buffer, text, BUFFER_SIZE);
 
-    while (_src - BUFFER_SIZE < len_src) {
+    while (_src - BUFFER_SIZE < strlen(text)) {
         SubCoord sc = longest_subsequence(window, buffer);
-
         if (sc.length < BREAK_EVEN) {
-            char c[2] = "";
+            char c[2] = {'\0'}, c_;
             sprintf(c, "%c", buffer[0]);
-            char cc = c[0];
-            fwrite(&cc, sizeof(cc), 1, dest);
+            c_ = c[0];
+            fwrite(&c_, sizeof(c_), 1, dest);
             shift(window, buffer, text, &_src, 1);
         } else {
-            char  c        = START_OF_REFERENCE_BYTE;
-            short position = WINDOW_SIZE - sc.position;
-            short length   = sc.length;
+            char  start    = START_OF_REFERENCE_BYTE;
+            short position = WINDOW_SIZE - sc.position, length = sc.length;
 
-            fwrite(&c, sizeof(c), 1, dest);
+            fwrite(&start, sizeof(start), 1, dest);
             fwrite(&position, sizeof(position), 1, dest);
             fwrite(&length, sizeof(length), 1, dest);
 
             shift(window, buffer, text, &_src, sc.length);
         }
     }
-
     free(text);
     fclose(src);
     fclose(dest);
@@ -147,76 +157,30 @@ extern void lzss_decode_file(char *filename) {
     FILE *src  = fopen(filename, "rb");
     FILE *dest = fopen(decoded_filename, "w");
 
-    char buffer[BUFFER_SIZE + 1] = {'\0'};
-    char window[WINDOW_SIZE + 1];
-
-    int  _src = BUFFER_SIZE;
-    long numbytes;
-
-    memset(window, '_', WINDOW_SIZE);
-
     fseek(src, 0L, SEEK_END);
-    numbytes = ftell(src);
+    long src_size = ftell(src);
     fseek(src, 0L, SEEK_SET);
 
-    char  test[1000] = "";
-    char *text       = (char *)calloc(numbytes, sizeof(char));
-    strncat(buffer, text, BUFFER_SIZE);
+    char *test = (char *)(calloc(src_size * 2, sizeof(char)));
 
-    for (; 1;) {
-        unsigned char buf[300] = {'\0'};
-        unsigned char c;
+    while (1) {
+        char buffer[300] = {'\0'}, c;
 
-        int x = fread(&c, sizeof(char), 1, src);
-        if (x == 0) break;
-
-        // printf("c = %c\n", c);
+        if (!fread(&c, sizeof(char), 1, src)) break;
 
         if (c != START_OF_REFERENCE_BYTE) {
-            sprintf(buf, "%c", c);
-            printf("bufX = %s\n", buf);
-            printf("bufX = %d\n", buf[0]);
+            sprintf(buffer, "%c", c);
         } else {
-            char  coord[30] = {'\0'};
             short position, length;
-
             fread(&position, sizeof(position), 1, src);
             fread(&length, sizeof(position), 1, src);
-
-            get_subsequence(test, strlen(test) - position, length, buf);
-            printf("buf = %s\n", buf);
+            get_subsequence(test, strlen(test) - position, length, buffer);
         }
-        strcat(test, buf);
-
-        printf("test = %s\n", test);
+        strcat(test, buffer);
     }
-    printf("TEST = %s\n", test);
     fwrite(test, strlen(test), 1, dest);
 
-    free(text);
-
+    free(test);
     fclose(src);
     fclose(dest);
-}
-
-extern void lzss_decode(char *src, char *dest) {
-    for (int i = 0; src[i] != '\0'; i++) {
-        char buf[300] = {'\0'};
-
-        if (src[i] != '(') {
-            sprintf(buf, "%c", src[i]);
-        } else {
-            char coord[30] = {'\0'};
-
-            /* Bug if pair is in the form (...|...) or more. */
-            get_subsequence(src, i, 9, coord);
-            SubCoord sc = get_subsequence_coord(coord);
-
-            get_subsequence(dest, strlen(dest) - sc.position, sc.length, buf);
-
-            i += (2 + ndigits(sc.position) + ndigits(sc.length));
-        }
-
-        strcat(dest, buf);
-    }
 }
