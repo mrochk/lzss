@@ -5,10 +5,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
-    int position;
-    int length;
-} SubCoord;
+uint fsize_name(char *filename) {
+    FILE *file = fopen(filename, "rb");
+    fseek(file, 0, SEEK_SET);
+    fseek(file, 0, SEEK_END);
+    uint size = (uint)ftell(file);
+    fclose(file);
+    return size;
+}
+
+uint fsize_file(FILE *file) {
+    fseek(file, 0, SEEK_SET);
+    fseek(file, 0, SEEK_END);
+    uint size = (uint)ftell(file);
+    fseek(file, 0, SEEK_SET);
+    return size;
+}
 
 static SubCoord make_subsequence_coord(int position, int length) {
     return (SubCoord){position, length};
@@ -118,9 +130,8 @@ extern void lzss_encode_file(char *filename) {
     char window[WINDOW_SIZE + 1] = {'\0'};
     memset(window, '_', WINDOW_SIZE);
 
-    fseek(src, 0L, SEEK_END);
-    long src_size = ftell(src);
-    fseek(src, 0L, SEEK_SET);
+    uint src_size = fsize_file(src);
+
     char *text = (char *)calloc(src_size, sizeof(char));
     fread(text, sizeof(char), src_size, src);
     strncat(buffer, text, BUFFER_SIZE);
@@ -136,6 +147,9 @@ extern void lzss_encode_file(char *filename) {
         } else {
             char  start    = START_OF_REFERENCE_BYTE;
             short position = WINDOW_SIZE - sc.position, length = sc.length;
+
+            // printf("Encoding a subsequence %d characters away, of length
+            // %d.\n", position, length);
 
             fwrite(&start, sizeof(start), 1, dest);
             fwrite(&position, sizeof(position), 1, dest);
@@ -161,20 +175,21 @@ extern void lzss_decode_file(char *filename) {
     long src_size = ftell(src);
     fseek(src, 0L, SEEK_SET);
 
-    char *test = (char *)(calloc(src_size * 2, sizeof(char)));
+    char *test = (char *)(malloc((src_size * 10) * sizeof(char)));
+    memset(test, '\0', src_size * 10);
 
+    char buffer[5000] = {'\0'}, c;
     while (1) {
-        char buffer[300] = {'\0'}, c;
-
         if (!fread(&c, sizeof(char), 1, src)) break;
-
+        memset(buffer, '\0', 5000);
         if (c != START_OF_REFERENCE_BYTE) {
             sprintf(buffer, "%c", c);
         } else {
             short position, length;
             fread(&position, sizeof(position), 1, src);
-            fread(&length, sizeof(position), 1, src);
+            fread(&length, sizeof(length), 1, src);
             get_subsequence(test, strlen(test) - position, length, buffer);
+            // printf("Decoding a subsequence of length %d.\n", length);
         }
         strcat(test, buffer);
     }
