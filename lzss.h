@@ -30,19 +30,8 @@ typedef struct {
 /* Byte used to indicate a dictionary reference. */
 #define START_OF_REFERENCE_BYTE -0x66
 
-/* Encode src and put the result in dest, dest should be bigger than src in
-   case the encoded version takes more place than the original (happens
-   sometimes, depending on the BREAK_EVEN used). */
-extern void lzss_encode_string(char *src, char *dest);
-
-/* Decode an array of characters encoded using lzss_encode and put
-   the result in dest. */
-extern void lzss_decodestring(char *src, char *dest);
-
-/* Same than lzss_encode_string but with a file. */
 extern void lzss_encode_file(char *filename);
 
-/* Same than lzss_decode_string but with a file. */
 extern void lzss_decode_file(char *filename);
 
 extern uint fsize_file(FILE *file);
