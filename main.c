@@ -5,17 +5,15 @@
 
 int main() {
     char encode[] = "input", decode[] = "input.enc";
-    uint _encode, _decode;
+    int  _encode, _decode, difference;
 
-    lzss_encode_file(encode);
-    puts("File encoded.");
+    _encode    = lzss_encode_file(encode);
+    _decode    = lzss_decode_file(decode);
+    difference = _encode - _decode;
 
-    lzss_decode_file(decode);
-    puts("File decoded.");
-
-    _encode = fsize_name(encode), _decode = fsize_name(decode);
-    printf("\nInput file size   = %u bytes.\n", _encode);
-    printf("Encoded file size = %u bytes.\n", _decode);
+    printf("Input file size   = %u bytes.\n", _decode);
+    printf("Encoded file size = %u  bytes.\n", _encode);
+    printf("Difference        = %d bytes.\n", difference);
 
     return EXIT_SUCCESS;
 }

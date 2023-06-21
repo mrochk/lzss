@@ -4,20 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint fsize_name(char *filename) {
-    FILE *file;
-    uint  size;
-
-    file = fopen(filename, "rb");
-    fseek(file, 0, SEEK_SET);
-    fseek(file, 0, SEEK_END);
-    size = (uint)ftell(file);
-
-    fclose(file);
-    return size;
-}
-
-uint fsize_file(FILE *file) {
+uint fsize(FILE *file) {
     uint size;
     fseek(file, 0, SEEK_SET);
     fseek(file, 0, SEEK_END);
@@ -48,35 +35,29 @@ static void shift(char *window, char *buffer, char *src, uint *_src, int n) {
 }
 
 static SubCoord longest_subsequence(char *window, char *buffer) {
-    int length   = 0;
-    int position = -1;
-    int len, _buf, _win;
+    uint length   = 0, len, _buf, _win;
+    int  position = -1;
 
     for (int pos = 0; pos < WINDOW_SIZE; pos++) {
-        len = _buf = 0;
-        _win       = pos;
+        len = _buf = 0, _win = pos;
 
         while ((_win <= WINDOW_SIZE && _buf <= BUFFER_SIZE) &&
-               (window[_win] != '\0' && window[_win] == buffer[_buf])) {
+               (window[_win] != '\0' && window[_win] == buffer[_buf]))
             len++, _win++, _buf++;
-        }
 
-        if (len > length) {
-            position = pos;
-            length   = len;
-        }
+        if (len > length) position = pos, length = len;
     }
 
     return make_subsequence_coord(position, length);
 }
 
-extern void lzss_encode_file(char *filename) {
+extern int lzss_encode_file(char *filename) {
     char     encoded_filename[300]   = {'\0'};
     char     buffer[BUFFER_SIZE + 1] = {'\0'};
     char     window[WINDOW_SIZE + 1] = {'\0'};
-    char *   text, c[2], c_, start = START_OF_REFERENCE_BYTE;
-    uint     _src = BUFFER_SIZE, src_size;
-    FILE *   src, *dest;
+    char *   text = NULL, c[2], c_, start = START_OF_REFERENCE_BYTE;
+    uint     _src = BUFFER_SIZE, src_size, encoded_size;
+    FILE *   src = NULL, *dest = NULL;
     short    position, length;
     SubCoord sc;
 
@@ -85,11 +66,11 @@ extern void lzss_encode_file(char *filename) {
     strcat(encoded_filename, filename);
     strcat(encoded_filename, ".enc");
 
-    src  = fopen(filename, "r");
-    dest = fopen(encoded_filename, "wb");
+    src = fopen(filename, "r"), dest = fopen(encoded_filename, "wb");
+    if (src == NULL || dest == NULL) return -1;
 
-    src_size = fsize_file(src);
-    text     = (char *)calloc(src_size, sizeof(char));
+    src_size = fsize(src), text = (char *)calloc(src_size, sizeof(char));
+    if (text == NULL) return -1;
 
     fread(text, sizeof(char), src_size, src);
     strncat(buffer, text, BUFFER_SIZE);
@@ -115,27 +96,34 @@ extern void lzss_encode_file(char *filename) {
         }
     }
 
+    encoded_size = fsize(dest);
+
     free(text);
+    text = NULL;
+
     fclose(src);
     fclose(dest);
+
+    printf("=> File \"%s\" encoded in \"%s\".\n", filename, encoded_filename);
+    return (int)encoded_size;
 }
 
-extern void lzss_decode_file(char *filename) {
+extern int lzss_decode_file(char *filename) {
     char  decoded_filename[100] = {'\0'};
     char  buffer[BUFFER_SIZE]   = {'\0'};
-    char  c, *text;
-    FILE *src, *dest;
+    char  c, *text = NULL;
+    FILE *src = NULL, *dest = NULL;
     short position, length;
-    uint  src_size;
+    uint  src_size, decoded_size;
 
     strcat(decoded_filename, filename);
     strcat(decoded_filename, ".dec");
 
-    src  = fopen(filename, "rb");
-    dest = fopen(decoded_filename, "w");
+    src = fopen(filename, "rb"), dest = fopen(decoded_filename, "w");
+    if (src == NULL || dest == NULL) return -1;
 
-    src_size = fsize_file(src);
-    text     = (char *)(calloc(src_size * 10, sizeof(char)));
+    src_size = fsize(src), text = (char *)(calloc(src_size * 2, sizeof(char)));
+    if (text == NULL) return -1;
 
     while (fread(&c, sizeof(char), 1, src)) {
         memset(buffer, '\0', BUFFER_SIZE);
@@ -154,7 +142,14 @@ extern void lzss_decode_file(char *filename) {
 
     fwrite(text, strlen(text), 1, dest);
 
+    decoded_size = fsize(dest);
+
     free(text);
+    text = NULL;
+
     fclose(src);
     fclose(dest);
+
+    printf("=> File \"%s\" decoded in \"%s\".\n", filename, decoded_filename);
+    return (int)decoded_size;
 }
