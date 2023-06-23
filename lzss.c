@@ -51,7 +51,7 @@ static SubCoord longest_subsequence(char *window, char *buffer) {
     return make_subsequence_coord(position, length);
 }
 
-extern int lzss_encode_file(char *filename) {
+extern int lzss_compress_file(char *filename) {
     char     encoded_filename[300]   = {'\0'};
     char     buffer[BUFFER_SIZE + 1] = {'\0'};
     char     window[WINDOW_SIZE + 1] = {'\0'};
@@ -104,7 +104,8 @@ extern int lzss_encode_file(char *filename) {
     fclose(src);
     fclose(dest);
 
-    printf("=> File \"%s\" encoded in \"%s\".\n", filename, encoded_filename);
+    printf("=> File \"%s\" compressed in \"%s\".\n", filename,
+           encoded_filename);
     return (int)encoded_size;
 }
 

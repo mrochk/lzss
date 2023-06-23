@@ -1,4 +1,5 @@
 .clang-format
 bin
 input.enc
+input.dec
 input.enc.dec

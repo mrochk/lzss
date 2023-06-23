@@ -2,7 +2,8 @@ all: build
 
 build:
 	@mkdir -p bin
-	@gcc -Wall -Wextra -pedantic main.c lzss.c -o bin/bin
+	@gcc -Wall -Wextra -pedantic main.c lzss.c -o bin/lzss
 
-run: build
-	@./bin/bin
+test:
+	@./bin/lzss -c input
+	@./bin/lzss -d input.enc

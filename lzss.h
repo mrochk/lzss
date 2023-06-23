@@ -1,8 +1,6 @@
 #ifndef LZSS_H
 #define LZSS_H
 
-#include <stdio.h>
-
 typedef unsigned int uint;
 
 /* Type used to represent the position of a subsequence in an array of
@@ -30,9 +28,14 @@ typedef struct {
 /* Byte used to indicate a dictionary reference. */
 #define START_OF_REFERENCE_BYTE -0x66
 
-/* Returns the size of the new encoded file. */
-extern int lzss_encode_file(char *filename);
+#define OPTION_DECODE "-d"
 
+#define OPTION_COMPRESS "-c"
+
+/* Returns the size in bytes of the new compressed file. */
+extern int lzss_compress_file(char *filename);
+
+/* Returns the size in bytes of the new decoded file. */
 extern int lzss_decode_file(char *filename);
 
 #endif
