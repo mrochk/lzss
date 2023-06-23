@@ -1,5 +1,5 @@
 # LZSS
-Text compression & decompression program implementing the LZSS algorithm.
+Utility file compression & decompression program implementing the LZSS algorithm.
 
 References:
 - https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Storer%E2%80%93Szymanski
@@ -12,4 +12,6 @@ You can modify the different constants used in the `lzss.h` header file and see 
 
 After compiling this program using `make`, to try this program on the provided `input` text file you can type `make test`.
 
-To compress a file use the "-c" option, and use "-d" to decode a file previously encoded using **this** program in: `lzss (-c|-d) <filename>`.
+To compress a file, use the "-c" option, and use "-d" to decode a file previously encoded using **this** program.
+
+Example: `./lzss -c file.txt`
