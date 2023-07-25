@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint fsize(FILE *file) {
+static uint fsize(FILE *file) {
     uint size;
     fseek(file, 0, SEEK_SET);
     fseek(file, 0, SEEK_END);
