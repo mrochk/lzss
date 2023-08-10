@@ -4,11 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-static uint fsize(FILE *file) {
-    uint size;
+static unsigned int fsize(FILE *file) {
+    unsigned int size;
+
     fseek(file, 0, SEEK_SET);
     fseek(file, 0, SEEK_END);
-    size = (uint)ftell(file);
+    size = (unsigned int)ftell(file);
 
     fseek(file, 0, SEEK_SET);
     return size;
@@ -23,7 +24,8 @@ static void get_subsequence(char *string, int from, int len, char *dest) {
         dest[_dest] = string[i];
 }
 
-static void shift(char *window, char *buffer, char *src, uint *_src, int n) {
+static void shift(char *window, char *buffer, char *src, unsigned int *_src,
+                  int n) {
     for (; n > 0; n--) {
         for (int i = 0; i < WINDOW_SIZE - 1; i++) window[i] = window[i + 1];
         window[WINDOW_SIZE - 1] = buffer[0];
@@ -35,8 +37,8 @@ static void shift(char *window, char *buffer, char *src, uint *_src, int n) {
 }
 
 static SubCoord longest_subsequence(char *window, char *buffer) {
-    uint length   = 0, len, _buf, _win;
-    int  position = -1;
+    unsigned int length   = 0, len, _buf, _win;
+    int          position = -1;
 
     for (int pos = 0; pos < WINDOW_SIZE; pos++) {
         len = _buf = 0, _win = pos;
@@ -52,14 +54,14 @@ static SubCoord longest_subsequence(char *window, char *buffer) {
 }
 
 extern int lzss_compress_file(char *filename) {
-    char     encoded_filename[300]   = {'\0'};
-    char     buffer[BUFFER_SIZE + 1] = {'\0'};
-    char     window[WINDOW_SIZE + 1] = {'\0'};
-    char *   text = NULL, c[2], c_, start = START_OF_REFERENCE_BYTE;
-    uint     _src = BUFFER_SIZE, src_size, encoded_size;
-    FILE *   src = NULL, *dest = NULL;
-    short    position, length;
-    SubCoord sc;
+    char         encoded_filename[300]   = {'\0'};
+    char         buffer[BUFFER_SIZE + 1] = {'\0'};
+    char         window[WINDOW_SIZE + 1] = {'\0'};
+    char *       text = NULL, c[2], c_, start = START_OF_REFERENCE_BYTE;
+    unsigned int _src = BUFFER_SIZE, src_size, encoded_size;
+    FILE *       src = NULL, *dest = NULL;
+    short        position, length;
+    SubCoord     sc;
 
     memset(window, '_', WINDOW_SIZE);
 
@@ -67,10 +69,10 @@ extern int lzss_compress_file(char *filename) {
     strcat(encoded_filename, ".enc");
 
     src = fopen(filename, "r"), dest = fopen(encoded_filename, "wb");
-    if (src == NULL || dest == NULL) return -1;
+    if (!src || !dest) return -1;
 
     src_size = fsize(src), text = (char *)calloc(src_size, sizeof(char));
-    if (text == NULL) return -1;
+    if (!text) return -1;
 
     fread(text, sizeof(char), src_size, src);
     strncat(buffer, text, BUFFER_SIZE);
@@ -110,21 +112,21 @@ extern int lzss_compress_file(char *filename) {
 }
 
 extern int lzss_decode_file(char *filename) {
-    char  decoded_filename[100] = {'\0'};
-    char  buffer[BUFFER_SIZE]   = {'\0'};
-    char  c, *text = NULL;
-    FILE *src = NULL, *dest = NULL;
-    short position, length;
-    uint  src_size, decoded_size;
+    char         decoded_filename[100] = {'\0'};
+    char         buffer[BUFFER_SIZE]   = {'\0'};
+    char         c, *text = NULL;
+    FILE *       src = NULL, *dest = NULL;
+    short        position, length;
+    unsigned int src_size, decoded_size;
 
     strcat(decoded_filename, filename);
     strcat(decoded_filename, ".dec");
 
     src = fopen(filename, "rb"), dest = fopen(decoded_filename, "w");
-    if (src == NULL || dest == NULL) return -1;
+    if (!src || !dest) return -1;
 
     src_size = fsize(src), text = (char *)(calloc(src_size * 2, sizeof(char)));
-    if (text == NULL) return -1;
+    if (!text) return -1;
 
     while (fread(&c, sizeof(char), 1, src)) {
         memset(buffer, '\0', BUFFER_SIZE);

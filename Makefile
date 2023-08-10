@@ -7,3 +7,9 @@ build:
 test:
 	@./bin/lzss -c input
 	@./bin/lzss -d input.enc
+
+fmt:
+	@clang-format-11 -i main.c lzss.c lzss.h
+
+clean:
+	@rm -f *.enc *.dec 

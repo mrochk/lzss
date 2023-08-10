@@ -1,8 +1,6 @@
 #ifndef LZSS_H
 #define LZSS_H
 
-typedef unsigned int uint;
-
 /* Type used to represent the position of a subsequence in an array of
    characters.*/
 typedef struct {
